@@ -1,13 +1,17 @@
-# HyperTech PWA v2 clean shell
+# HyperTech PWA v3 footer-cover patch
 
-This patch hides the Streamlit embed chrome at the bottom by clipping the
-cross-origin iframe shell. It does not change Supabase, business data, or
-the main Streamlit app.
+This version uses a parent-layer overlay on mobile to physically cover the
+Streamlit embed strip ("Built with Streamlit / Fullscreen").
 
-Replace in the `hypertech-pwa` repository:
-- `index.html`
-- `service-worker.js`
+Replace these files in the `hypertech-pwa` repository:
+- index.html
+- service-worker.js
 
-Then commit to `main`, wait for GitHub Pages to redeploy, and fully close/reopen
-the installed HyperTech PWA. If Android keeps an older service-worker cache,
-uninstall HyperTech once and reinstall it from the GitHub Pages URL.
+Commit to `main`. Wait for GitHub Pages to redeploy.
+
+Because Android PWAs can retain a service worker aggressively, if the old strip
+still appears after the GitHub Pages update:
+1. uninstall HyperTech from the phone,
+2. open https://artchlo.github.io/hypertech-pwa/ in Chrome,
+3. refresh once,
+4. install HyperTech again.

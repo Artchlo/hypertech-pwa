@@ -1,4 +1,4 @@
-const CACHE = "hypertech-pwa-v3";
+const CACHE = "hypertech-pwa-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -24,10 +24,12 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
+
+  // Only control/cache the HyperTech PWA shell. Streamlit remains live.
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: "no-store" })
       .then((response) => {
         const copy = response.clone();
         caches.open(CACHE).then((cache) => cache.put(event.request, copy));

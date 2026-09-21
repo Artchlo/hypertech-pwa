@@ -19,7 +19,8 @@
       --blue: #10479F;
       --red: #EE483D;
       --navy: #071427;
-      --embed-bar-height: 74px;
+      --app-bg: #f7f9fc;
+      --cover-h: 74px;
     }
 
     * { box-sizing: border-box; }
@@ -29,32 +30,61 @@
       height: 100%;
       margin: 0;
       overflow: hidden;
-      background: var(--navy);
+      background: var(--app-bg);
       overscroll-behavior: none;
     }
 
-    /*
-      Streamlit's embedded frame can render its own "Built with Streamlit /
-      Fullscreen" chrome at the bottom. Because that UI is cross-origin,
-      outer-page CSS cannot target it directly. Instead the iframe is made
-      taller than the visible viewport and clipped by this shell.
-    */
     #streamlit-shell {
       position: fixed;
       inset: 0;
       overflow: hidden;
-      background: #f7f9fc;
+      background: var(--app-bg);
     }
 
     #app {
       position: absolute;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100%;
-      height: calc(100% + var(--embed-bar-height));
+      height: 100%;
       border: 0;
       display: block;
-      background: #f7f9fc;
+      background: var(--app-bg);
+    }
+
+    /*
+      Streamlit Community Cloud's embed chrome is cross-origin, so the PWA
+      cannot select/remove it directly. This parent-layer cover sits ABOVE the
+      iframe and masks only the bottom embed strip on phone/PWA layouts.
+    */
+    #streamlit-bottom-cover {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: calc(var(--cover-h) + env(safe-area-inset-bottom));
+      z-index: 30;
+      background:
+        linear-gradient(180deg,
+          rgba(247,249,252,0.97) 0%,
+          rgba(247,249,252,1) 22%,
+          #f7f9fc 100%);
+      border-top: 1px solid rgba(16,71,159,.04);
+      pointer-events: auto;
+    }
+
+    /* Very small HyperTech accent so the masked area looks intentional. */
+    #streamlit-bottom-cover::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 18%;
+      right: 18%;
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(16,71,159,.18),
+        rgba(238,72,61,.12),
+        transparent);
     }
 
     #splash {
@@ -78,7 +108,7 @@
 
     .card {
       text-align: center;
-      color: white;
+      color: #fff;
       padding: 24px;
     }
 
@@ -86,7 +116,7 @@
       width: 118px;
       height: 118px;
       border-radius: 28px;
-      background: white;
+      background: #fff;
       padding: 13px;
       box-shadow:
         0 0 0 2px rgba(255,255,255,.08),
@@ -138,9 +168,13 @@
       to { transform: translateX(125%); }
     }
 
-    /* Slightly more crop on narrow Android screens where the embed bar is taller. */
-    @media (max-width: 700px) {
-      :root { --embed-bar-height: 82px; }
+    /* On desktop browser preview, don't waste space with the mobile mask. */
+    @media (min-width: 801px) {
+      #streamlit-bottom-cover { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      :root { --cover-h: 78px; }
     }
   </style>
 </head>
@@ -155,6 +189,8 @@
     ></iframe>
   </div>
 
+  <div id="streamlit-bottom-cover" aria-hidden="true"></div>
+
   <div id="splash">
     <div class="card">
       <img class="logo" src="icon-512.png" alt="HyperTech logo" />
@@ -166,8 +202,11 @@
 
   <script>
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./service-worker.js");
+      window.addEventListener("load", async () => {
+        try {
+          const reg = await navigator.serviceWorker.register("./service-worker.js");
+          await reg.update();
+        } catch (e) {}
       });
     }
 
